@@ -11,7 +11,7 @@ Each kit carries its own provenance, installation/recovery procedure, validation
 
 ## Repository status
 
-This is a **publication draft**, not yet a public release. Original `kit`, ZeroLab, integration, documentation, and hardening material is licensed under MIT. Pwnagotchi-derived plugin files remain subject to their upstream GPL terms; Waveshare driver files retain their upstream permission notice.
+This repository is the **public release** of the sanitized `kit` publication tree. Original `kit`, ZeroLab, integration, documentation, and hardening material is licensed under MIT. Pwnagotchi-derived plugin files remain subject to their upstream GPL terms; Waveshare driver files retain their upstream permission notice.
 
 The accepted private artifacts are not committed. Publication trees are rebuilt from frozen/sanitized source bundles with secrets and runtime databases excluded.
 
@@ -23,4 +23,4 @@ The accepted private artifacts are not committed. Publication trees are rebuilt 
 - Keep upstream-derived code visibly separated from original integration code.
 - Treat validation evidence as version-specific; do not generalize one hardware acceptance result to every Raspberry Pi/Wi-Fi combination.
 
-See [`PUBLICATION_CHECKLIST.md`](PUBLICATION_CHECKLIST.md) before creating a public remote.
+See [`PUBLICATION_CHECKLIST.md`](PUBLICATION_CHECKLIST.md) for the publication criteria to apply before future public releases or substantial publication-tree updates.

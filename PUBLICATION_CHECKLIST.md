@@ -1,6 +1,6 @@
 # Publication checklist
 
-Before the first public GitHub push:
+Before a public release or substantial publication-tree update:
 
 - [x] Original `kit` / ZeroLab / integration code licensed under MIT.
 - [ ] Keep `licenses/GPL-3.0.txt` and all third-party source notices intact.
@@ -13,4 +13,4 @@ Before the first public GitHub push:
 - [ ] Keep Pwnagotchi-derived plugin files separated/attributed as upstream GPL material.
 - [ ] Review installers on disposable media before describing them as portable beyond the accepted hardware baseline.
 - [ ] Review every generated manifest after the final repository files are staged.
-- [ ] Create the public remote only after the staged tree passes manual review and secret scanning.
+- [ ] Publish the release only after the staged tree passes manual review and secret scanning.
