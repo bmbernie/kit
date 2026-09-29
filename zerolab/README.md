@@ -1,4 +1,4 @@
-# ZeroLab v0.8d
+# ZeroLab
 
 ZeroLab is a Raspberry Pi Zero W security-lab gadget platform. The accepted v0.8d build exposes composable USB gadget functions, preserves a dedicated RNDIS management path, supports Wi-Fi-primary/Bluetooth-PAN fallback networking, reports PiSugar2 power telemetry, and renders live state on a Waveshare 2.13-inch V2 e-paper display.
 
