@@ -1,0 +1,39 @@
+[Unit]
+Description=ZeroLab e-paper status display
+After=zerolab.service NetworkManager.service
+Wants=NetworkManager.service
+
+StartLimitIntervalSec=180
+StartLimitBurst=4
+
+[Service]
+Type=simple
+
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=-/etc/zerolab/display.env
+
+ExecStartPre=/usr/bin/test -e /dev/spidev0.0
+ExecStartPre=/usr/bin/test -f /usr/local/lib/zerolab/display/dashboard_once.py
+
+ExecStart=/usr/bin/python3 /usr/local/lib/zerolab/display/service.py
+
+# Reload signals only the main watcher process.
+# This avoids sending SIGUSR1 to temporary health/helper
+# subprocesses as happened with systemctl kill.
+ExecReload=/bin/kill -USR1 $MAINPID
+
+Restart=on-failure
+RestartSec=15
+
+TimeoutStopSec=20
+
+User=root
+Group=root
+UMask=0022
+
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

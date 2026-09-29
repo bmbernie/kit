@@ -1,0 +1,37 @@
+#!/bin/bash
+set -eu -o pipefail
+
+source /usr/local/lib/zerolab/common.sh
+
+G="$ZEROLAB_GADGET"
+UDC="$(zerolab_udc)"
+
+zerolab_require_usb_identity
+zerolab_require_clean
+modprobe libcomposite
+
+mkdir "$G"
+
+zerolab_apply_usb_identity "$G"
+echo 0x0100 > "$G/bcdDevice"
+echo 0x0200 > "$G/bcdUSB"
+
+mkdir -p "$G/strings/0x409"
+echo ZEROLAB0001       > "$G/strings/0x409/serialnumber"
+echo ZeroLab           > "$G/strings/0x409/manufacturer"
+echo "ZeroLab USB Serial" > "$G/strings/0x409/product"
+
+mkdir -p "$G/configs/c.1/strings/0x409"
+echo "ZeroLab Serial" > "$G/configs/c.1/strings/0x409/configuration"
+echo 120              > "$G/configs/c.1/MaxPower"
+
+mkdir "$G/functions/acm.usb0"
+ln -s \
+    "$G/functions/acm.usb0" \
+    "$G/configs/c.1/acm.usb0"
+
+echo "$UDC" > "$G/UDC"
+
+printf 'ZeroLab serial active: UDC=%s state=%s\n' \
+    "$UDC" \
+    "$(cat "/sys/class/udc/$UDC/state")"

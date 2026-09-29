@@ -1,0 +1,14 @@
+/etc/pwnagotchi/log/pwnagotchi.log
+/etc/pwnagotchi/log/pwnagotchi-debug.log
+/etc/pwnagotchi/log/bettercap.log
+/etc/pwnagotchi/log/pwngrid-peer.log
+{
+    daily
+    rotate 7
+    maxsize 5M
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

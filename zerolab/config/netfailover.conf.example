@@ -1,0 +1,9 @@
+# Wi-Fi -> Bluetooth failover tests association only, not Internet reachability.
+WIFI_IFACE=wlan0
+BT_CONNECTION=zerolab-phone-tether
+PHONE_MAC=AA:BB:CC:DD:EE:FF
+CHECK_INTERVAL=10
+FAIL_THRESHOLD=3
+RECOVER_THRESHOLD=3
+BT_RETRY_COOLDOWN=60
+STARTUP_GRACE=30

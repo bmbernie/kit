@@ -1,0 +1,111 @@
+#!/bin/bash
+set -eu -o pipefail
+
+source /usr/local/lib/zerolab/common.sh
+
+G="$ZEROLAB_GADGET"
+UDC="$(zerolab_udc)"
+CON=zerolab-usb
+
+zerolab_require_usb_identity
+zerolab_require_clean
+
+test -n "$UDC"
+
+if ! nmcli -t -f NAME connection show | grep -Fxq "$CON"; then
+    echo "Required NetworkManager profile '$CON' is missing" >&2
+    exit 1
+fi
+
+modprobe libcomposite
+
+mkdir "$G"
+
+zerolab_apply_usb_identity "$G"
+echo 0x0100 > "$G/bcdDevice"
+echo 0x0200 > "$G/bcdUSB"
+
+echo 0xef > "$G/bDeviceClass"
+echo 0x02 > "$G/bDeviceSubClass"
+echo 0x01 > "$G/bDeviceProtocol"
+
+mkdir -p "$G/strings/0x409"
+
+echo ZEROLAB0001 \
+    > "$G/strings/0x409/serialnumber"
+
+echo ZeroLab \
+    > "$G/strings/0x409/manufacturer"
+
+echo 'ZeroLab USB Ethernet' \
+    > "$G/strings/0x409/product"
+
+mkdir -p "$G/configs/c.1/strings/0x409"
+
+echo 'ZeroLab RNDIS' \
+    > "$G/configs/c.1/strings/0x409/configuration"
+
+echo 120 \
+    > "$G/configs/c.1/MaxPower"
+
+mkdir "$G/functions/rndis.usb0"
+
+echo '02:13:37:00:00:01' \
+    > "$G/functions/rndis.usb0/dev_addr"
+
+echo '02:13:37:00:00:02' \
+    > "$G/functions/rndis.usb0/host_addr"
+
+ln -s \
+    "$G/functions/rndis.usb0" \
+    "$G/configs/c.1/rndis.usb0"
+
+echo 1 \
+    > "$G/os_desc/use"
+
+echo 0xcd \
+    > "$G/os_desc/b_vendor_code"
+
+echo 'MSFT100' \
+    > "$G/os_desc/qw_sign"
+
+echo 'RNDIS' \
+    > "$G/functions/rndis.usb0/os_desc/interface.rndis/compatible_id"
+
+echo '5162001' \
+    > "$G/functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id"
+
+ln -s \
+    "$G/configs/c.1" \
+    "$G/os_desc/c.1"
+
+echo "$UDC" > "$G/UDC"
+
+echo 'Waiting for usb0...'
+
+for _ in $(seq 1 40); do
+    [ -e /sys/class/net/usb0 ] && break
+    sleep 0.25
+done
+
+test -e /sys/class/net/usb0
+
+# Let NetworkManager own layer 3.
+nmcli connection up "$CON" ifname usb0 >/dev/null
+
+for _ in $(seq 1 40); do
+    if ip -4 addr show dev usb0 |
+        grep -q '10\.13\.37\.1/30'; then
+        break
+    fi
+    sleep 0.25
+done
+
+ip -4 addr show dev usb0 |
+    grep -q '10\.13\.37\.1/30'
+
+printf 'ZeroLab Ethernet active: UDC=%s state=%s\n' \
+    "$UDC" \
+    "$(cat "/sys/class/udc/$UDC/state")"
+
+ip -br addr show usb0

@@ -1,0 +1,208 @@
+#!/bin/bash
+set -eu -o pipefail
+
+source /usr/local/lib/zerolab/common.sh
+
+G="$ZEROLAB_GADGET"
+UDC="$(zerolab_udc)"
+CON=zerolab-usb
+
+cleanup_on_error()
+{
+    rc=$?
+
+    if [ "$rc" -ne 0 ]; then
+        echo "ZeroLab full profile setup failed; cleaning partial gadget" >&2
+
+        /usr/local/lib/zerolab/profiles/down \
+            >/dev/null 2>&1 || true
+    fi
+
+    exit "$rc"
+}
+
+trap cleanup_on_error EXIT
+
+zerolab_require_usb_identity
+zerolab_require_clean
+test -n "$UDC"
+
+if ! nmcli -t -f NAME connection show |
+    grep -Fxq "$CON"
+then
+    echo "Required NetworkManager profile '$CON' is missing" >&2
+    exit 1
+fi
+
+modprobe libcomposite
+
+mkdir "$G"
+
+zerolab_apply_usb_identity "$G"
+echo 0x0100 > "$G/bcdDevice"
+echo 0x0200 > "$G/bcdUSB"
+
+# IAD composite class.
+echo 0xef > "$G/bDeviceClass"
+echo 0x02 > "$G/bDeviceSubClass"
+echo 0x01 > "$G/bDeviceProtocol"
+
+mkdir -p "$G/strings/0x409"
+
+echo ZEROLAB0001 \
+    > "$G/strings/0x409/serialnumber"
+
+echo ZeroLab \
+    > "$G/strings/0x409/manufacturer"
+
+echo 'ZeroLab USB Full Composite' \
+    > "$G/strings/0x409/product"
+
+mkdir -p "$G/configs/c.1/strings/0x409"
+
+echo 'ZeroLab Ethernet + Serial + HID' \
+    > "$G/configs/c.1/strings/0x409/configuration"
+
+echo 120 \
+    > "$G/configs/c.1/MaxPower"
+
+# ------------------------------------------------------------
+# RNDIS -- linked first to preserve MI_00
+# ------------------------------------------------------------
+
+mkdir "$G/functions/rndis.usb0"
+
+echo '02:13:37:00:00:01' \
+    > "$G/functions/rndis.usb0/dev_addr"
+
+echo '02:13:37:00:00:02' \
+    > "$G/functions/rndis.usb0/host_addr"
+
+ln -s \
+    "$G/functions/rndis.usb0" \
+    "$G/configs/c.1/rndis.usb0"
+
+echo 1 \
+    > "$G/os_desc/use"
+
+echo 0xcd \
+    > "$G/os_desc/b_vendor_code"
+
+echo MSFT100 \
+    > "$G/os_desc/qw_sign"
+
+echo RNDIS \
+    > "$G/functions/rndis.usb0/os_desc/interface.rndis/compatible_id"
+
+echo 5162001 \
+    > "$G/functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id"
+
+ln -s \
+    "$G/configs/c.1" \
+    "$G/os_desc/c.1"
+
+# ------------------------------------------------------------
+# ACM -- linked second to preserve MI_02
+# ------------------------------------------------------------
+
+mkdir "$G/functions/acm.usb0"
+
+ln -s \
+    "$G/functions/acm.usb0" \
+    "$G/configs/c.1/acm.usb0"
+
+# ------------------------------------------------------------
+# HID keyboard -- linked third to preserve MI_04
+# ------------------------------------------------------------
+
+mkdir "$G/functions/hid.usb0"
+
+echo 1 \
+    > "$G/functions/hid.usb0/protocol"
+
+echo 1 \
+    > "$G/functions/hid.usb0/subclass"
+
+echo 8 \
+    > "$G/functions/hid.usb0/report_length"
+
+python3 - <<'PY' > /tmp/zerolab-hid-desc
+import sys
+
+sys.stdout.buffer.write(bytes([
+    0x05,0x01, 0x09,0x06, 0xA1,0x01, 0x05,0x07,
+    0x19,0xE0, 0x29,0xE7, 0x15,0x00, 0x25,0x01,
+    0x75,0x01, 0x95,0x08, 0x81,0x02,
+    0x95,0x01, 0x75,0x08, 0x81,0x01,
+    0x95,0x05, 0x75,0x01, 0x05,0x08,
+    0x19,0x01, 0x29,0x05, 0x91,0x02,
+    0x95,0x01, 0x75,0x03, 0x91,0x01,
+    0x95,0x06, 0x75,0x08, 0x15,0x00, 0x25,0x65,
+    0x05,0x07, 0x19,0x00, 0x29,0x65, 0x81,0x00,
+    0xC0
+]))
+PY
+
+cat /tmp/zerolab-hid-desc \
+    > "$G/functions/hid.usb0/report_desc"
+
+rm -f /tmp/zerolab-hid-desc
+
+ln -s \
+    "$G/functions/hid.usb0" \
+    "$G/configs/c.1/hid.usb0"
+
+# ------------------------------------------------------------
+# Bind
+# ------------------------------------------------------------
+
+echo "$UDC" > "$G/UDC"
+
+echo 'Waiting for USB functions...'
+
+for _ in $(seq 1 60); do
+    if [ -e /sys/class/net/usb0 ] &&
+       [ -e /dev/ttyGS0 ] &&
+       [ -e /dev/hidg0 ]; then
+        break
+    fi
+
+    sleep 0.25
+done
+
+test -e /sys/class/net/usb0
+test -e /dev/ttyGS0
+test -e /dev/hidg0
+
+# NetworkManager owns Layer 3.
+nmcli connection up "$CON" ifname usb0 >/dev/null
+
+for _ in $(seq 1 40); do
+    if ip -4 addr show dev usb0 |
+        grep -q '10\.13\.37\.1/30'; then
+        break
+    fi
+
+    sleep 0.25
+done
+
+ip -4 addr show dev usb0 |
+    grep -q '10\.13\.37\.1/30'
+
+trap - EXIT
+
+printf 'ZeroLab full profile active: UDC=%s state=%s\n' \
+    "$UDC" \
+    "$(cat "/sys/class/udc/$UDC/state")"
+
+printf 'Ethernet: '
+ip -br addr show usb0
+
+printf 'Serial:   '
+ls -l /dev/ttyGS0
+
+printf 'HID:      '
+ls -l /dev/hidg0
+
+printf 'Power:    '
+vcgencmd get_throttled

@@ -1,0 +1,5 @@
+Vendor: Waveshare
+Repository: waveshareteam/e-Paper
+Branch: master
+Driver: epd2in13_V2
+Retrieved: 2026-09-28T11:46:07-07:00

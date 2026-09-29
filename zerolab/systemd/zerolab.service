@@ -1,0 +1,22 @@
+[Unit]
+Description=ZeroLab USB Gadget Controller
+Documentation=man:systemd.service(5)
+Wants=NetworkManager.service
+After=local-fs.target NetworkManager.service
+RequiresMountsFor=/sys/kernel/config
+
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStart=/usr/local/lib/zerolab/boot.sh
+ExecStop=/usr/local/sbin/zerolab down
+
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

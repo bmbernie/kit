@@ -1,0 +1,15 @@
+bluez	5.82-1.1+rpt2
+bluez-firmware	1.2-13+rpt2
+dosfstools	4.2-1.2
+fonts-dejavu-core	2.37-8
+fonts-dejavu-mono	2.37-8
+gpiod	2.2.1-2+rpi1+deb13u1
+i2c-tools	4.4-2
+iw	6.9-1
+network-manager	1.52.1-1+rpt4
+python3-gpiozero	2.0.1-0+rpt1+trixie
+python3-lgpio	0.2.2-1~rpt1+trixie
+python3-pil	11.1.0-5+deb13u4
+python3-spidev	3.6-1+b2
+raspi-utils	20260626-1
+rfkill	2.41.5-0+deb13u1

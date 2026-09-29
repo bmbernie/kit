@@ -1,0 +1,42 @@
+#!/bin/bash
+set -eu -o pipefail
+
+source /usr/local/lib/zerolab/common.sh
+
+G="$ZEROLAB_GADGET"
+
+if [ ! -d "$G" ]; then
+    echo 'ZeroLab gadget already inactive'
+    exit 0
+fi
+
+zerolab_unbind
+
+# Remove every user-created ConfigFS symlink, including:
+#   configs/*/<function>
+#   os_desc/<configuration>
+find "$G" -type l -delete
+
+for f in "$G"/functions/*; do
+    [ -e "$f" ] || continue
+    rmdir "$f"
+done
+
+for lang in "$G"/configs/*/strings/*; do
+    [ -e "$lang" ] || continue
+    rmdir "$lang"
+done
+
+for cfg in "$G"/configs/*; do
+    [ -e "$cfg" ] || continue
+    rmdir "$cfg"
+done
+
+for lang in "$G"/strings/*; do
+    [ -e "$lang" ] || continue
+    rmdir "$lang"
+done
+
+rmdir "$G"
+
+echo 'ZeroLab gadget inactive'

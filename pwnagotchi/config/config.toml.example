@@ -1,0 +1,59 @@
+# Pwnagotchi kit configuration template
+#
+# Derived from the accepted kit build, but intentionally
+# contains no credentials, API keys, private network names,
+# captured-network state, or device-specific secrets.
+#
+# Install as:
+#
+#   /etc/pwnagotchi/config.toml
+#
+# after adding settings appropriate for your own hardware.
+
+main.name = "pwnagotchi"
+main.lang = "en"
+
+# ------------------------------------------------------------------
+# Display
+# ------------------------------------------------------------------
+
+# Hardware used by this kit build:
+#
+#   Waveshare 2.13-inch V2
+#   rotation 180 degrees
+#
+# Enable/configure these according to the Pwnagotchi version
+# you are installing.
+#
+# ui.display.enabled = true
+# ui.display.type = "waveshare_2"
+# ui.display.rotation = 180
+
+# ------------------------------------------------------------------
+# WPA-SEC
+# ------------------------------------------------------------------
+
+main.plugins.wpa-sec.enabled = false
+main.plugins.wpa-sec.api_key = ""
+main.plugins.wpa-sec.api_url = "https://wpa-sec.stanev.org"
+
+# ------------------------------------------------------------------
+# WiGLE
+# ------------------------------------------------------------------
+
+main.plugins.wigle.enabled = false
+main.plugins.wigle.api_key = ""
+
+# ------------------------------------------------------------------
+# Local/private settings
+# ------------------------------------------------------------------
+#
+# Add locally as required:
+#
+# - web UI credentials
+# - private SSIDs/BSSIDs
+# - network whitelist entries
+# - API credentials
+# - GPS/location configuration
+#
+# Do not commit real credentials or captured network data.

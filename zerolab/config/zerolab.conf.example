@@ -1,0 +1,9 @@
+# ZeroLab runtime configuration
+
+BOOT_PROFILE=full
+
+# USB identity is intentionally not assigned by this repository.
+# Supply a VID/PID pair that you are authorized to use.
+# Both values must use 0xNNNN notation.
+USB_VID=
+USB_PID=

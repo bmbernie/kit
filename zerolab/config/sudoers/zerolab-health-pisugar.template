@@ -1,0 +1,6 @@
+@ZEROLAB_USER@ ALL=(root) NOPASSWD: /usr/local/lib/zerolab/pisugar_read.py rtc
+@ZEROLAB_USER@ ALL=(root) NOPASSWD: /usr/local/lib/zerolab/pisugar_read.py power-a2
+@ZEROLAB_USER@ ALL=(root) NOPASSWD: /usr/local/lib/zerolab/pisugar_read.py power-a3
+@ZEROLAB_USER@ ALL=(root) NOPASSWD: /usr/local/lib/zerolab/pisugar_read.py power-a4
+@ZEROLAB_USER@ ALL=(root) NOPASSWD: /usr/local/lib/zerolab/pisugar_read.py power-a5
+@ZEROLAB_USER@ ALL=(root) NOPASSWD: /usr/local/lib/zerolab/pisugar_read.py power-55

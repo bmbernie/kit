@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.swp
+*.tmp
+.DS_Store
+.vscode/
+.idea/
+
+# Private/runtime artifacts
+*.pcap
+*.pcapng
+*.22000
+*.hc22000
+.wpa_sec_db
+config.toml
+
+# Generated release packages
+*.tar.gz
+*.zip

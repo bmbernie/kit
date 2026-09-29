@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -u
+
+TIMEOUT=60
+INTERVAL=1
+
+echo "Waiting for pwngrid-peer API on 127.0.0.1:8666..."
+
+for ((i=0; i<TIMEOUT; i+=INTERVAL)); do
+    if systemctl is-active --quiet pwngrid-peer.service; then
+        if ss -H -ltn '( sport = :8666 )' 2>/dev/null | grep -q .; then
+            echo "pwngrid-peer ready on port 8666"
+            exit 0
+        fi
+    fi
+
+    sleep "$INTERVAL"
+done
+
+echo "ERROR: pwngrid-peer API was not ready after ${TIMEOUT}s" >&2
+
+echo >&2
+systemctl --no-pager -l status pwngrid-peer.service >&2 || true
+
+echo >&2
+ss -ltnp >&2 || true
+
+exit 1

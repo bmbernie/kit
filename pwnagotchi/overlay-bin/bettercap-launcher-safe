@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+source /usr/bin/pwnlib
+
+# Preserve the stock encrypted-mode behavior.
+if is_crypted_mode; then
+    while ! is_decrypted; do
+        echo "Waiting for decryption..."
+        sleep 1
+    done
+fi
+
+#
+# Cold-boot policy for BCM43430:
+#
+# Do NOT unconditionally reload brcmfmac here.
+#
+# The kernel normally attaches the device during boot. Reloading it again
+# immediately before monitor-mode creation has been observed to crash the
+# BCM43430 firmware / SDIO backplane.
+#
+
+echo "bettercap-safe: waiting for kernel-created wlan0..."
+
+if ! wait_for_interface wlan0 20; then
+    echo "bettercap-safe: wlan0 did not appear within 20 seconds" >&2
+    exit 1
+fi
+
+#
+# Give the freshly initialized firmware a short quiet period before creating
+# the monitor VIF.
+#
+echo "bettercap-safe: wlan0 present; allowing firmware to settle for 3 seconds..."
+sleep 3
+
+if [ ! -e /sys/class/net/wlan0 ]; then
+    echo "bettercap-safe: wlan0 disappeared during settle period" >&2
+    exit 1
+fi
+
+echo "bettercap-safe: creating monitor interface..."
+
+if ! start_monitor_interface; then
+    echo "bettercap-safe: start_monitor_interface failed" >&2
+    exit 1
+fi
+
+#
+# Require wlan0mon to remain healthy for several consecutive seconds.
+# This catches the failure mode where monitor creation succeeds briefly and
+# brcmfmac crashes immediately afterward.
+#
+echo "bettercap-safe: validating wlan0mon stability..."
+
+for second in 1 2 3 4 5; do
+    if [ ! -e /sys/class/net/wlan0mon ]; then
+        echo "bettercap-safe: wlan0mon disappeared during stability check" >&2
+        exit 1
+    fi
+
+    if ! is_interface_up wlan0mon; then
+        echo "bettercap-safe: wlan0mon lost UP state during stability check" >&2
+        exit 1
+    fi
+
+    sleep 1
+done
+
+echo "bettercap-safe: wlan0mon stable; starting Bettercap"
+
+if is_auto_mode_no_delete; then
+    exec /usr/local/bin/bettercap \
+        -no-colors \
+        -caplet pwnagotchi-auto \
+        -iface wlan0mon
+else
+    exec /usr/local/bin/bettercap \
+        -no-colors \
+        -caplet pwnagotchi-manual \
+        -iface wlan0mon
+fi

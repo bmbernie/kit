@@ -1,0 +1,36 @@
+PWNAGOTCHI SANITIZED PUBLICATION SOURCE
+
+Canonical source:
+  pwnagotchi-final-20260926-201303.tar.gz
+
+Canonical source SHA-256:
+  a183fae8ce88b7722878278cbd4c3ed83b0352f5c53ef0c7b0e9386a610cdfe9
+
+Build:
+  Pwnagotchi 2.9.5.9
+  Raspberry Pi based appliance
+
+Sanitization performed:
+  - removed .wpa_sec_db runtime state
+  - excluded private config.toml
+  - generated config.toml.example
+  - removed Python bytecode
+  - removed runtime log files
+
+Accepted build-specific material retained:
+  - bounded Bettercap restart policy
+  - Bettercap safe launcher
+  - NetworkManager ordering
+  - Bettercap readiness gates
+  - pwngrid readiness gates
+  - Pwnagotchi launcher
+  - WPA-SEC plugin modification
+  - WiGLE plugin modification
+  - Pwnagotchi NetworkManager policies
+  - logrotate configuration
+  - i2c-dev configuration
+
+Publication rule:
+  Do not add private SSIDs, API credentials, passwords,
+  handshakes, WPA-SEC runtime databases, Bluetooth keys,
+  SSH private keys, or other device-specific secrets.

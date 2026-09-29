@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+# Pwnagotchi needs both:
+#   1. wlan0mon created and administratively UP
+#   2. Bettercap API listening on TCP/8081
+#
+# bettercap.service is Type=simple, so systemd considers it active
+# before these conditions are necessarily true.
+
+deadline=$((SECONDS + 30))
+stable=0
+
+while (( SECONDS < deadline )); do
+    mon_ready=0
+    api_ready=0
+
+    if [[ -r /sys/class/net/wlan0mon/flags ]]; then
+        flags="$(cat /sys/class/net/wlan0mon/flags)"
+
+        # IFF_UP == bit 0x1.
+        if (( flags & 1 )); then
+            mon_ready=1
+        fi
+    fi
+
+    if /usr/bin/ss -ltn 2>/dev/null | grep -q ':8081 '; then
+        api_ready=1
+    fi
+
+    # Require two consecutive successful observations so we do not
+    # race a transient interface/API appearance.
+    if (( mon_ready && api_ready )); then
+        ((stable += 1))
+
+        if (( stable >= 2 )); then
+            exit 0
+        fi
+    else
+        stable=0
+    fi
+
+    sleep 1
+done
+
+echo 'Pwnagotchi startup gate: Bettercap did not become ready within 30 seconds.' >&2
+
+/usr/bin/systemctl status bettercap.service \
+    --no-pager -l >&2 || true
+
+/usr/sbin/ip -br link >&2 || true
+/usr/bin/ss -ltn >&2 || true
+
+exit 1

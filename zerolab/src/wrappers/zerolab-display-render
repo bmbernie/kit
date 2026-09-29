@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+if ! /usr/bin/systemctl is-active \
+    --quiet \
+    zerolab-display.service
+then
+    echo 'zerolab-display.service is not active' >&2
+    exit 1
+fi
+
+exec /usr/bin/systemctl \
+    reload \
+    zerolab-display.service

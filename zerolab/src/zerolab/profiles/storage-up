@@ -1,0 +1,102 @@
+#!/bin/bash
+set -eu -o pipefail
+
+source /usr/local/lib/zerolab/common.sh
+
+G="$ZEROLAB_GADGET"
+UDC="$(zerolab_udc)"
+
+IMG=/var/lib/zerolab/images/zerolab-readonly-v0.4.img
+SUM="$IMG.sha256"
+
+cleanup_on_error()
+{
+    rc=$?
+
+    if [ "$rc" -ne 0 ]; then
+        echo "ZeroLab storage setup failed; cleaning partial gadget" >&2
+
+        /usr/local/lib/zerolab/profiles/down \
+            >/dev/null 2>&1 || true
+    fi
+
+    exit "$rc"
+}
+
+trap cleanup_on_error EXIT
+
+zerolab_require_usb_identity
+zerolab_require_clean
+test -n "$UDC"
+
+test -f "$IMG"
+test -f "$SUM"
+
+sha256sum -c "$SUM" >/dev/null
+
+modprobe libcomposite
+
+mkdir "$G"
+
+zerolab_apply_usb_identity "$G"
+echo 0x0100 > "$G/bcdDevice"
+echo 0x0200 > "$G/bcdUSB"
+
+mkdir -p "$G/strings/0x409"
+
+echo ZEROLAB0001 \
+    > "$G/strings/0x409/serialnumber"
+
+echo ZeroLab \
+    > "$G/strings/0x409/manufacturer"
+
+echo 'ZeroLab Read-Only Storage' \
+    > "$G/strings/0x409/product"
+
+mkdir -p "$G/configs/c.1/strings/0x409"
+
+echo 'ZeroLab Read-Only Disk' \
+    > "$G/configs/c.1/strings/0x409/configuration"
+
+echo 120 \
+    > "$G/configs/c.1/MaxPower"
+
+mkdir "$G/functions/mass_storage.usb0"
+
+echo 1 \
+    > "$G/functions/mass_storage.usb0/stall"
+
+echo 1 \
+    > "$G/functions/mass_storage.usb0/lun.0/ro"
+
+echo 1 \
+    > "$G/functions/mass_storage.usb0/lun.0/removable"
+
+echo 0 \
+    > "$G/functions/mass_storage.usb0/lun.0/cdrom"
+
+echo "$IMG" \
+    > "$G/functions/mass_storage.usb0/lun.0/file"
+
+ln -s \
+    "$G/functions/mass_storage.usb0" \
+    "$G/configs/c.1/mass_storage.usb0"
+
+echo "$UDC" > "$G/UDC"
+
+sleep 2
+
+trap - EXIT
+
+printf 'ZeroLab storage active: UDC=%s state=%s\n' \
+    "$UDC" \
+    "$(cat "/sys/class/udc/$UDC/state")"
+
+printf 'Backing:   '
+cat "$G/functions/mass_storage.usb0/lun.0/file"
+
+printf 'Read-only: '
+cat "$G/functions/mass_storage.usb0/lun.0/ro"
+
+printf 'Power:     '
+vcgencmd get_throttled
