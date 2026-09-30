@@ -1,12 +1,12 @@
 # ZeroLab
 
-ZeroLab is a Raspberry Pi Zero W security-lab gadget platform. The accepted v0.8d build exposes composable USB gadget functions, preserves a dedicated RNDIS management path, supports Wi-Fi-primary/Bluetooth-PAN fallback networking, reports PiSugar2 power telemetry, and renders live state on a Waveshare 2.13-inch V2 e-paper display.
+ZeroLab is a Raspberry Pi Zero W (security lab) gadget platform. It exposes composable USB gadget functions, preserves a dedicated RNDIS management path, supports Wi-Fi-primary/Bluetooth-PAN fallback networking, reports PiSugar2 power management, and renders live state on a Waveshare 2.13-inch V2 e-ink display.
 
-## Accepted hardware/software baseline
+## Bill of Materials
 
 - Raspberry Pi Zero W Rev 1.1 / BCM2835 / ARMv6
 - Raspberry Pi OS Lite 32-bit, Raspbian 13 (trixie)
-- accepted kernel: `6.18.50+rpt-rpi-v6`
+- Kernel: `6.18.50+rpt-rpi-v6`
 - PiSugar2 1200 mAh battery board
 - Waveshare 2.13-inch V2 e-paper HAT
 - USB gadget management network: `10.13.37.1/30` on the Pi, host side normally `10.13.37.2/30`
